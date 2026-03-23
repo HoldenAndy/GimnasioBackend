@@ -1,4 +1,4 @@
-package com.saas.sistema.gimnasio.configuracion;
+package com.saas.sistema.gimnasio.nucleo.configuracion;
 
 import java.util.UUID;
 
