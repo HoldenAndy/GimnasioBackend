@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,6 +35,20 @@ public class ManejadorExcepcionesGlobal {
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> manejarAccesoDenegado(AccessDeniedException ex) {
+        Map<String, String> respuesta = new HashMap<>();
+        respuesta.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(respuesta);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> manejarExcepcionGlobal(Exception ex) {
+        Map<String, String> respuesta = new HashMap<>();
+        respuesta.put("error", "Ocurrió un error interno en el servidor. Por favor, contacte a soporte.");
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
