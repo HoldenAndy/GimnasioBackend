@@ -46,7 +46,7 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         clienteService.eliminarCliente(id);
         return ResponseEntity.noContent().build();
