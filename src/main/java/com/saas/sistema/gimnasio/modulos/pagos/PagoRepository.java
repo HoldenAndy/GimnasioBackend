@@ -15,6 +15,12 @@ import java.util.UUID;
 @Repository
 public interface PagoRepository extends JpaRepository<PagoEntidad, UUID> {
 
+    @Query("SELECT COALESCE(SUM(p.monto), 0) FROM PagoEntidad p WHERE p.tenantId = :tenantId AND p.estadoActivo = true AND p.fechaPago >= :inicioMes AND p.fechaPago <= :finMes")
+    BigDecimal calcularRecaudacionDelMes(@Param("tenantId") UUID tenantId, @Param("inicioMes") java.time.LocalDateTime inicioMes, @Param("finMes") java.time.LocalDateTime finMes);
+
+    @Query("SELECT COALESCE(SUM(p.monto), 0) FROM PagoEntidad p WHERE p.suscripcionEntidad.id = :suscripcionId AND p.tenantId = :tenantId AND p.estadoActivo = true")
+    BigDecimal obtenerTotalPagadoPorSuscripcion(@Param("suscripcionId") UUID suscripcionId, @Param("tenantId") UUID tenantId);
+
     List<PagoEntidad> findBySuscripcionEntidad_ClienteEntidad_IdAndTenantIdAndEstadoActivoTrueOrderByFechaPagoDesc(UUID clienteId, UUID tenantId);
 
     Optional<PagoEntidad> findByIdAndTenantId(UUID id, UUID tenantId);
@@ -22,9 +28,6 @@ public interface PagoRepository extends JpaRepository<PagoEntidad, UUID> {
     Page<PagoEntidad> findByTenantId(UUID tenantId, Pageable pageable);
 
     boolean existsByNumeroReferenciaAndTenantIdAndEstadoActivoTrue(String numeroReferencia, UUID tenantId);
-
-    @Query("SELECT COALESCE(SUM(p.monto), 0) FROM PagoEntidad p WHERE p.suscripcionEntidad.id = :suscripcionId AND p.tenantId = :tenantId AND p.estadoActivo = true")
-    BigDecimal obtenerTotalPagadoPorSuscripcion(@Param("suscripcionId") UUID suscripcionId, @Param("tenantId") UUID tenantId);
 
     List<PagoEntidad> findBySuscripcionEntidad_IdAndTenantIdOrderByFechaPagoDesc(UUID idSuscripcion, UUID tenantId);
 }
