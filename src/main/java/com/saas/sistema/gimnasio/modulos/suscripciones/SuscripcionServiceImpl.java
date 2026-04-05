@@ -50,17 +50,17 @@ public class SuscripcionServiceImpl implements SuscripcionService {
         UUID tenantActual = ContextoTenant.getTenantId();
 
         boolean tieneActiva = suscripcionRepository.existsByClienteEntidadIdAndTenantIdAndEstadoSuscripcion(
-                dto.idCliente(), tenantActual, EstadoSuscripcion.ACTIVA.name());
+                dto.idCliente(), tenantActual, EstadoSuscripcion.ACTIVA);
 
         if (tieneActiva) {
-            throw new IllegalArgumentException("Este clienteEntidad ya tiene una suscripción activa. Cancele la actual o espere a que venza para renovar.");
+            throw new IllegalArgumentException("Este cliente ya tiene una suscripción activa. Cancele la actual o espere a que venza para renovar.");
         }
 
         // 1. Validar que el ClienteEntidad exista y esté ACTIVO
         ClienteEntidad clienteEntidad = clienteRepository.findByIdAndTenantId(dto.idCliente(), tenantActual)
-                .orElseThrow(() -> new EntityNotFoundException("ClienteEntidad no encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado"));
         if (!clienteEntidad.isEstadoActivo()) {
-            throw new IllegalArgumentException("No se puede crearCliente una suscripción para un clienteEntidad inactivo.");
+            throw new IllegalArgumentException("No se puede crear una suscripción para un cliente inactivo.");
         }
 
         // 2. Validar que el Plan exista y esté ACTIVO
@@ -75,7 +75,7 @@ public class SuscripcionServiceImpl implements SuscripcionService {
         suscripcionEntidad.setTenantId(tenantActual);
         suscripcionEntidad.setClienteEntidad(clienteEntidad);
         suscripcionEntidad.setPlanMembresiaEntidad(plan);
-        suscripcionEntidad.setEstadoSuscripcion(EstadoSuscripcion.ACTIVA);
+        suscripcionEntidad.setEstadoSuscripcion(EstadoSuscripcion.PENDIENTE_PAGO);
         suscripcionEntidad.setFechaCreacion(LocalDateTime.now());
 
         LocalDate hoy = LocalDate.now();

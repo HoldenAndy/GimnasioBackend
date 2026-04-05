@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -36,7 +37,7 @@ public class ClienteServiceImpl implements ClienteService {
 
     private ClienteEntidad obtenerEntidadPorId(UUID id) {
         return clienteRepository.findByIdAndTenantId(id, ContextoTenant.getTenantId())
-                .orElseThrow(() -> new EntityNotFoundException("ClienteEntidad no encontrado o no pertenece a su gimnasio"));
+                .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado o no pertenece a su gimnasio"));
     }
 
     @Transactional
@@ -45,11 +46,13 @@ public class ClienteServiceImpl implements ClienteService {
         UUID tenantActual = ContextoTenant.getTenantId();
 
         if (clienteRepository.existsByNumeroDocumentoAndTenantId(clienteRequestDto.numeroDocumento(), tenantActual)) {
-            throw new IllegalArgumentException("Ya existe un clienteEntidad con el documento: " + clienteRequestDto.numeroDocumento());
+            throw new IllegalArgumentException("Ya existe un cliente con el documento: " + clienteRequestDto.numeroDocumento());
         }
 
-        if (clienteRepository.existsByCorreoIgnoreCaseAndTenantId(clienteRequestDto.correo().trim(), tenantActual)) {
-            throw new IllegalArgumentException("El correo electrónico ya está registrado en este gimnasio: " + clienteRequestDto.correo());
+       if (clienteRequestDto.correo() != null && !clienteRequestDto.correo().isBlank()) {
+            if (clienteRepository.existsByCorreoIgnoreCaseAndTenantId(clienteRequestDto.correo().trim(), tenantActual)) {
+                throw new IllegalArgumentException("El correo electrónico ya está registrado en este gimnasio: " + clienteRequestDto.correo());
+            }
         }
 
         ClienteEntidad clienteEntidad = new ClienteEntidad();
@@ -69,10 +72,15 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<ClienteResponseDto> obtenerTodosLosClientes(Pageable pageable) {
+    public Page<ClienteResponseDto> obtenerTodosLosClientes(String query, java.time.LocalDate inicio, LocalDate fin, boolean estadoActivo, Pageable pageable) {
         UUID tenantActual = ContextoTenant.getTenantId();
 
-        Page<ClienteEntidad> paginaClientes = clienteRepository.findByTenantIdAndEstadoActivoTrue(tenantActual, pageable);
+        LocalDateTime fechaInicio = (inicio != null) ? inicio.atStartOfDay() : java.time.LocalDateTime.of(1900, 1, 1, 0, 0);
+        LocalDateTime fechaFin = (fin != null) ? fin.atTime(java.time.LocalTime.MAX) : java.time.LocalDateTime.of(2100, 12, 31, 23, 59);
+        String queryPattern = (query != null && !query.isBlank()) ? "%" + query.trim().toLowerCase() + "%" : "%";
+        Page<ClienteEntidad> paginaClientes = clienteRepository.buscarClientesConFiltros(
+                tenantActual, queryPattern, fechaInicio, fechaFin, estadoActivo, pageable
+        );
 
         return paginaClientes.map(this::mapearADto);
     }
@@ -85,20 +93,37 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Transactional
     @Override
+    public void reactivarCliente(UUID id) {
+        ClienteEntidad cliente = clienteRepository.findByIdAndTenantId(id, ContextoTenant.getTenantId())
+                .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado"));
+        
+        if (cliente.isEstadoActivo()) {
+            throw new IllegalArgumentException("El cliente ya se encuentra activo.");
+        }
+        cliente.setEstadoActivo(true);
+        clienteRepository.save(cliente);
+    }
+
+    @Transactional
+    @Override
     public ClienteResponseDto actualizarCliente(UUID id, ClienteRequestDto dto) {
         UUID tenantActual = ContextoTenant.getTenantId();
         ClienteEntidad clienteEntidad = obtenerEntidadPorId(id);
         if (!clienteEntidad.isEstadoActivo()) {
-            throw new IllegalArgumentException("No se puede modificar un clienteEntidad que ha sido eliminado/archivado.");
+            throw new IllegalArgumentException("No se puede modificar un cliente que ha sido eliminado/archivado.");
         }
         if (!clienteEntidad.getNumeroDocumento().equals(dto.numeroDocumento()) &&
                 clienteRepository.existsByNumeroDocumentoAndTenantId(dto.numeroDocumento(), tenantActual)) {
-            throw new IllegalArgumentException("El nuevo documento ya está registrado en otro clienteEntidad");
+            throw new IllegalArgumentException("El nuevo documento ya está registrado en otro cliente");
         }
 
-        if (!clienteEntidad.getCorreo().equalsIgnoreCase(dto.correo().trim()) &&
-                clienteRepository.existsByCorreoIgnoreCaseAndTenantId(dto.correo().trim(), tenantActual)) {
-            throw new IllegalArgumentException("El nuevo correo electrónico ya está siendo usado por otro clienteEntidad");
+        if (dto.correo() != null && !dto.correo().isBlank()) {
+            boolean correoCambio = clienteEntidad.getCorreo() == null || 
+                                  !clienteEntidad.getCorreo().equalsIgnoreCase(dto.correo().trim());
+            
+            if (correoCambio && clienteRepository.existsByCorreoIgnoreCaseAndTenantId(dto.correo().trim(), tenantActual)) {
+                throw new IllegalArgumentException("El nuevo correo electrónico ya está siendo usado por otro cliente");
+            }
         }
 
         clienteEntidad.setNombre(dto.nombres());
@@ -118,7 +143,7 @@ public class ClienteServiceImpl implements ClienteService {
     public void eliminarCliente(UUID id) {
         ClienteEntidad clienteEntidad = obtenerEntidadPorId(id);
         if (!clienteEntidad.isEstadoActivo()) {
-            throw new IllegalArgumentException("El clienteEntidad ya se encuentra inactivo en el sistema.");
+            throw new IllegalArgumentException("El cliente ya se encuentra inactivo en el sistema.");
         }
         clienteEntidad.setEstadoActivo(false);
         clienteRepository.save(clienteEntidad);
