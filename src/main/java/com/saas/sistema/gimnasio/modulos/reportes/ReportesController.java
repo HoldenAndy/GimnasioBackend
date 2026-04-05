@@ -16,7 +16,7 @@ public class ReportesController {
         this.reportesService = reportesService;
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/dashboard")
     public ResponseEntity<DashboardResponseDto> obtenerDashboard() {
         return ResponseEntity.ok(reportesService.obtenerMetricasDashboard());
