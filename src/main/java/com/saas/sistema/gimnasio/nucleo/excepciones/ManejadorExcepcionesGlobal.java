@@ -46,6 +46,7 @@ public class ManejadorExcepcionesGlobal {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> manejarExcepcionGlobal(Exception ex) {
+        ex.printStackTrace(); 
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("error", "Ocurrió un error interno en el servidor. Por favor, contacte a soporte.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
