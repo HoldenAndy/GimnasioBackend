@@ -100,7 +100,7 @@ public class PagoServiceImpl implements PagoService {
     @Transactional(readOnly = true)
     @Override
     public List<PagoResponseDto> obtenerPagoPorCliente(UUID idCliente) {
-        return pagoRepository.findBySuscripcionEntidad_ClienteEntidad_IdAndTenantIdAndEstadoActivoTrueOrderByFechaPagoDesc(
+        return pagoRepository.findBySuscripcionEntidad_ClienteEntidad_IdAndTenantIdOrderByFechaPagoDesc(
                         idCliente, ContextoTenant.getTenantId())
                 .stream()
                 .map(this::mapearADto)
