@@ -31,7 +31,7 @@ public interface SuscripcionRepository extends JpaRepository<SuscripcionEntidad,
 
     Optional<SuscripcionEntidad> findByIdAndTenantId(UUID id, UUID tenantId);
 
-    boolean existsByClienteEntidadIdAndTenantIdAndEstadoSuscripcion(UUID clienteId, UUID tenantId, String estado);
+    boolean existsByClienteEntidadIdAndTenantIdAndEstadoSuscripcion(UUID clienteId, UUID tenantId, EstadoSuscripcion estado);
 
     Page<SuscripcionEntidad> findByTenantId(UUID tenantId, Pageable pageable);
 
