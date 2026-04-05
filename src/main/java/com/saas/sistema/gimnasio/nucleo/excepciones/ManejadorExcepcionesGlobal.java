@@ -3,7 +3,6 @@ package com.saas.sistema.gimnasio.nucleo.excepciones;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +17,7 @@ public class ManejadorExcepcionesGlobal {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, String>> manejarEntidadNoEncontrada(EntityNotFoundException ex) {
+        ex.printStackTrace();
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
@@ -25,6 +25,7 @@ public class ManejadorExcepcionesGlobal {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> manejarArgumentoInvalido(IllegalArgumentException ex) {
+        ex.printStackTrace();
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
@@ -32,6 +33,7 @@ public class ManejadorExcepcionesGlobal {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> manejarJsonInvalido(HttpMessageNotReadableException ex) {
+        ex.printStackTrace();
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
@@ -39,6 +41,7 @@ public class ManejadorExcepcionesGlobal {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, String>> manejarAccesoDenegado(AccessDeniedException ex) {
+        ex.printStackTrace();
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(respuesta);
@@ -54,12 +57,11 @@ public class ManejadorExcepcionesGlobal {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> manejarValidaciones(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String campo = ((FieldError) error).getField();
-            String mensaje = error.getDefaultMessage();
-            errores.put(campo, mensaje);
-        });
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errores);
+        ex.printStackTrace();
+        Map<String, String> respuesta = new HashMap<>();
+        String mensajeError = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        respuesta.put("error", mensajeError);
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
     }
 }
