@@ -45,13 +45,13 @@ public class ReportesServiceImpl implements ReportesService {
 
         BigDecimal recaudacion = pagoRepository.calcularRecaudacionDelMes(tenantActual, inicioDelMes, finDelMes);
         long clientesActivos = suscripcionRepository.countByTenantIdAndEstadoSuscripcion(tenantActual, EstadoSuscripcion.ACTIVA);
-        long porVencer = suscripcionRepository.contarSuscripcionesPorVencer(tenantActual, EstadoSuscripcion.ACTIVA, hoy, dentroDeSieteDias);
+        long suscripcionesPorVencer = suscripcionRepository.contarSuscripcionesPorVencer(tenantActual, EstadoSuscripcion.ACTIVA, hoy, dentroDeSieteDias);
         long asistencias = ingresoRepository.contarAsistenciasDelDia(tenantActual, inicioDelDia, finDelDia);
 
         return new DashboardResponseDto(
                 recaudacion,
                 clientesActivos,
-                porVencer,
+                suscripcionesPorVencer,
                 asistencias
         );
     }
