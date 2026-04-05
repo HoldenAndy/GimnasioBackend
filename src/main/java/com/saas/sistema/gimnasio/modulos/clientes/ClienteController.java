@@ -4,11 +4,13 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
@@ -29,8 +31,14 @@ public class ClienteController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<Page<ClienteResponseDto>> listarClientes(@PageableDefault(page = 0, size = 10, sort = "apellido") Pageable pageable) {
-        return ResponseEntity.ok(clienteService.obtenerTodosLosClientes(pageable));
+    public ResponseEntity<Page<ClienteResponseDto>> listarClientes(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin,
+            @RequestParam(defaultValue = "true") boolean estadoActivo,
+            @PageableDefault(page = 0, size = 10, sort = "apellido") Pageable pageable) {
+        
+        return ResponseEntity.ok(clienteService.obtenerTodosLosClientes(search, inicio, fin, estadoActivo, pageable));
     }
 
     @GetMapping("/{id}")
@@ -39,6 +47,14 @@ public class ClienteController {
         return ResponseEntity.ok(clienteService.obtenerClientePorId(id));
     }
 
+    @PatchMapping("/{id}/reactivar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
+    public ResponseEntity<Void> reactivar(@PathVariable UUID id) {
+        // Deberás crear este método en tu ClienteService
+        clienteService.reactivarCliente(id);
+        return ResponseEntity.noContent().build();
+    }
+    
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<ClienteResponseDto> actualizar(@PathVariable UUID id, @Valid @RequestBody ClienteRequestDto request) {
@@ -46,7 +62,7 @@ public class ClienteController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<Void> eliminar(@PathVariable UUID id) {
         clienteService.eliminarCliente(id);
         return ResponseEntity.noContent().build();
