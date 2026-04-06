@@ -25,7 +25,8 @@ public class PlanMembresiaServiceImpl implements PlanMembresiaService {
                 p.getNombre(),
                 p.getDescripcion(),
                 p.getDuracionDias(),
-                p.getPrecio()
+                p.getPrecio(),
+                p.isEstadoActivo()
         );
     }
 
@@ -54,10 +55,16 @@ public class PlanMembresiaServiceImpl implements PlanMembresiaService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<PlanMembresiaResponseDto> obtenerTodosLosPlanesMembresia(Pageable pageable) {
+    public Page<PlanMembresiaResponseDto> obtenerTodosLosPlanes(boolean incluirInactivos, Pageable pageable) {
         UUID tenantActual = ContextoTenant.getTenantId();
-        return planMembresiaRepository.findByTenantIdAndEstadoActivoTrue(tenantActual, pageable)
-                .map(this::mapearADto);
+        Page<PlanMembresiaEntidad> paginaPlanes;
+        if (incluirInactivos) {
+            paginaPlanes = planMembresiaRepository.findByTenantIdAndEstadoActivoFalse(tenantActual, pageable);
+        } else {
+            paginaPlanes = planMembresiaRepository.findByTenantIdAndEstadoActivoTrue(tenantActual, pageable);
+        }
+        
+        return paginaPlanes.map(this::mapearADto);
     }
 
     @Transactional(readOnly = true)

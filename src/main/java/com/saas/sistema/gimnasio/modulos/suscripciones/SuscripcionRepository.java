@@ -17,6 +17,18 @@ import java.util.UUID;
 public interface SuscripcionRepository extends JpaRepository<SuscripcionEntidad, UUID> {
 
     @Modifying
+    @Query("UPDATE SuscripcionEntidad s SET s.estadoSuscripcion = :estadoCancelado " +
+           "WHERE s.clienteEntidad.id = :clienteId AND s.tenantId = :tenantId " +
+           "AND s.estadoSuscripcion IN (:estadoActiva, :estadoPendiente)")
+    void cancelarSuscripcionesPorBajaDeCliente(
+            @Param("clienteId") UUID clienteId,
+            @Param("tenantId") UUID tenantId,
+            @Param("estadoCancelado") EstadoSuscripcion estadoCancelado,
+            @Param("estadoActiva") EstadoSuscripcion estadoActiva,
+            @Param("estadoPendiente") EstadoSuscripcion estadoPendiente
+    );
+
+    @Modifying
     @Query("UPDATE SuscripcionEntidad s SET s.estadoSuscripcion = :nuevoEstado WHERE s.estadoSuscripcion = :estadoViejo AND s.fechaFin < :hoy")
     int actualizarEstadosVencidos(@Param("estadoViejo") EstadoSuscripcion estadoViejo, @Param("nuevoEstado") EstadoSuscripcion nuevoEstado, @Param("hoy") LocalDate hoy);
 

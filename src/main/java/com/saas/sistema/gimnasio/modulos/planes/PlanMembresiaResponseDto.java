@@ -8,5 +8,6 @@ public record PlanMembresiaResponseDto(
         String nombre,
         String descripcion,
         Integer duracionDias,
-        BigDecimal precio
+        BigDecimal precio,
+        boolean estadoActivo
 ) {}

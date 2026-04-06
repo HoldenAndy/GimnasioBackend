@@ -29,8 +29,10 @@ public class PlanMembresiaController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<Page<PlanMembresiaResponseDto>> listarPlanes(@PageableDefault(page = 0, size = 10, sort = "precio") Pageable pageable) {
-        return ResponseEntity.ok(planMembresiaService.obtenerTodosLosPlanesMembresia(pageable));
+    public ResponseEntity<Page<PlanMembresiaResponseDto>> listarPlanes(
+            @RequestParam(required = false, defaultValue = "false") boolean incluirInactivos,
+            @PageableDefault(page = 0, size = 10, sort = "precio") Pageable pageable) {
+        return ResponseEntity.ok(planMembresiaService.obtenerTodosLosPlanes(incluirInactivos, pageable));
     }
 
     @GetMapping("/{id}")

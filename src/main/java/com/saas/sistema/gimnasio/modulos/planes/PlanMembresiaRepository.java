@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface PlanMembresiaRepository extends JpaRepository<PlanMembresiaEntidad, UUID> {
-    List<PlanMembresiaEntidad> findByTenantId(UUID tenantId);
+    org.springframework.data.domain.Page<PlanMembresiaEntidad> findByTenantId(UUID tenantId, Pageable pageable);
 
     Optional<PlanMembresiaEntidad> findByIdAndTenantId(UUID id, UUID tenantId);
 
@@ -21,4 +21,5 @@ public interface PlanMembresiaRepository extends JpaRepository<PlanMembresiaEnti
 
     List<PlanMembresiaEntidad> findByTenantIdAndEstadoActivoTrue(UUID tenantId);
 
+    Page<PlanMembresiaEntidad> findByTenantIdAndEstadoActivoFalse(UUID tenantId, Pageable pageable);
 }

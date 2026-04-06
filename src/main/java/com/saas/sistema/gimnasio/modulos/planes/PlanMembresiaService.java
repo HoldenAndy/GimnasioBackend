@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface PlanMembresiaService {
     PlanMembresiaResponseDto crearPlanMembresia(PlanMembresiaRequestDto dto);
 
-    Page<PlanMembresiaResponseDto> obtenerTodosLosPlanesMembresia(Pageable pageable);
+    public Page<PlanMembresiaResponseDto> obtenerTodosLosPlanes(boolean incluirInactivos, Pageable pageable);
 
     List<PlanMembresiaResponseDto> obtenerPlanesParaVenta();
 

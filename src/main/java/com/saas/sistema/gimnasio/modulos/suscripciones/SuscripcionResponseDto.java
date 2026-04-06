@@ -1,5 +1,6 @@
 package com.saas.sistema.gimnasio.modulos.suscripciones;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -10,5 +11,8 @@ public record SuscripcionResponseDto(
         String nombrePlan,
         LocalDate fechaInicio,
         LocalDate fechaFin,
-        EstadoSuscripcion estadoSuscripcion
+        EstadoSuscripcion estadoSuscripcion,
+        boolean planActivo,
+        BigDecimal precioTotal,
+        BigDecimal saldoPendiente
 ) {}

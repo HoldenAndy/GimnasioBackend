@@ -1,5 +1,7 @@
 package com.saas.sistema.gimnasio.modulos.clientes;
 
+import com.saas.sistema.gimnasio.modulos.suscripciones.EstadoSuscripcion;
+import com.saas.sistema.gimnasio.modulos.suscripciones.SuscripcionRepository;
 import com.saas.sistema.gimnasio.nucleo.configuracion.ContextoTenant;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -15,9 +17,11 @@ import java.util.UUID;
 public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final SuscripcionRepository suscripcionRepository;
 
-    public ClienteServiceImpl(ClienteRepository clienteRepository) {
+    public ClienteServiceImpl(ClienteRepository clienteRepository, SuscripcionRepository suscripcionRepository) {
         this.clienteRepository = clienteRepository;
+        this.suscripcionRepository = suscripcionRepository;
     }
 
     private ClienteResponseDto mapearADto(ClienteEntidad c) {
@@ -36,7 +40,8 @@ public class ClienteServiceImpl implements ClienteService {
     }
 
     private ClienteEntidad obtenerEntidadPorId(UUID id) {
-        return clienteRepository.findByIdAndTenantId(id, ContextoTenant.getTenantId())
+        UUID tenantActual = ContextoTenant.getTenantId();
+        return clienteRepository.findByIdAndTenantId(id, tenantActual)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado o no pertenece a su gimnasio"));
     }
 
@@ -147,5 +152,13 @@ public class ClienteServiceImpl implements ClienteService {
         }
         clienteEntidad.setEstadoActivo(false);
         clienteRepository.save(clienteEntidad);
+
+        suscripcionRepository.cancelarSuscripcionesPorBajaDeCliente(
+                id, 
+                clienteEntidad.getTenantId(), 
+                EstadoSuscripcion.CANCELADA,
+                EstadoSuscripcion.ACTIVA,
+                EstadoSuscripcion.PENDIENTE_PAGO
+        );
     }
 }

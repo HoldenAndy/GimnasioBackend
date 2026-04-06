@@ -4,6 +4,7 @@ import com.saas.sistema.gimnasio.modulos.clientes.ClienteEntidad;
 import com.saas.sistema.gimnasio.nucleo.configuracion.ContextoTenant;
 import com.saas.sistema.gimnasio.modulos.planes.PlanMembresiaEntidad;
 import com.saas.sistema.gimnasio.modulos.clientes.ClienteRepository;
+import com.saas.sistema.gimnasio.modulos.pagos.PagoRepository;
 import com.saas.sistema.gimnasio.modulos.planes.PlanMembresiaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
@@ -22,14 +23,17 @@ public class SuscripcionServiceImpl implements SuscripcionService {
     private final SuscripcionRepository suscripcionRepository;
     private final ClienteRepository clienteRepository;
     private final PlanMembresiaRepository planRepository;
+    private final PagoRepository pagoRepository;
 
     public SuscripcionServiceImpl(
             SuscripcionRepository suscripcionRepository,
             ClienteRepository clienteRepository,
-            PlanMembresiaRepository planRepository) {
+            PlanMembresiaRepository planRepository,
+            PagoRepository pagoRepository) {
         this.suscripcionRepository = suscripcionRepository;
         this.clienteRepository = clienteRepository;
         this.planRepository = planRepository;
+        this.pagoRepository = pagoRepository;
     }
 
     private SuscripcionResponseDto mapearADto(SuscripcionEntidad s) {
@@ -40,7 +44,10 @@ public class SuscripcionServiceImpl implements SuscripcionService {
                 s.getPlanMembresiaEntidad().getNombre(),
                 s.getFechaInicio(),
                 s.getFechaFin(),
-                s.getEstadoSuscripcion()
+                s.getEstadoSuscripcion(),
+                s.getPlanMembresiaEntidad().isEstadoActivo(),
+                s.getPlanMembresiaEntidad().getPrecio(),
+                s.getPlanMembresiaEntidad().getPrecio().subtract(pagoRepository.obtenerTotalPagadoPorSuscripcion(s.getId(), s.getTenantId()))
         );
     }
 

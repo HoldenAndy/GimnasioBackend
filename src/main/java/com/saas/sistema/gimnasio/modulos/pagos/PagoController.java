@@ -5,11 +5,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,9 +33,13 @@ public class PagoController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<Page<PagoResponseDto>> listarPagos(@PageableDefault(page = 0, size = 10, sort = "fechaPago", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(pagoService.obtenerHistorialPagos(pageable));
-    }
+    public ResponseEntity<Page<PagoResponseDto>> listarPagos(
+        @RequestParam(required = false) String query,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin,
+        Pageable pageable) {
+    return ResponseEntity.ok(pagoService.obtenerHistorialPagos(query, inicio, fin, pageable));
+}
 
     @GetMapping("/suscripcion/{idSuscripcion}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")

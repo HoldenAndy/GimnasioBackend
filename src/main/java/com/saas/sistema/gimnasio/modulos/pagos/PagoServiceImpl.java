@@ -119,9 +119,12 @@ public class PagoServiceImpl implements PagoService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<PagoResponseDto> obtenerHistorialPagos(Pageable pageable) {
+    public Page<PagoResponseDto> obtenerHistorialPagos(String query, java.time.LocalDate inicio, java.time.LocalDate fin, Pageable pageable) {
         UUID tenantActual = ContextoTenant.getTenantId();
-        return pagoRepository.findByTenantId(tenantActual, pageable)
+        java.time.LocalDateTime fechaInicio = (inicio != null) ? inicio.atStartOfDay() : java.time.LocalDateTime.of(1900, 1, 1, 0, 0);
+        java.time.LocalDateTime fechaFin = (fin != null) ? fin.atTime(java.time.LocalTime.MAX) : java.time.LocalDateTime.of(2100, 12, 31, 23, 59);
+        String queryPattern = (query != null && !query.isBlank()) ? "%" + query.trim().toLowerCase() + "%" : "%";
+        return pagoRepository.buscarPagosConFiltros(tenantActual, queryPattern, fechaInicio, fechaFin, pageable)
                 .map(this::mapearADto);
     }
 
@@ -142,12 +145,13 @@ public class PagoServiceImpl implements PagoService {
 
         pagoRepository.saveAndFlush(pagoEntidad);
         SuscripcionEntidad suscripcionEntidad = pagoEntidad.getSuscripcionEntidad();
-        BigDecimal precioTotalDelPlan = suscripcionEntidad.getPlanMembresiaEntidad().getPrecio();
-
-        BigDecimal totalYaPagado = pagoRepository.obtenerTotalPagadoPorSuscripcion(suscripcionEntidad.getId(), tenantActual);
-        if (totalYaPagado.compareTo(precioTotalDelPlan) < 0) {
-            suscripcionEntidad.setEstadoSuscripcion(EstadoSuscripcion.PENDIENTE_PAGO);
-            suscripcionRepository.save(suscripcionEntidad);
+        if (suscripcionEntidad.getEstadoSuscripcion() != EstadoSuscripcion.CANCELADA) {
+            BigDecimal precioTotalDelPlan = suscripcionEntidad.getPlanMembresiaEntidad().getPrecio();
+            BigDecimal totalYaPagado = pagoRepository.obtenerTotalPagadoPorSuscripcion(suscripcionEntidad.getId(), tenantActual);
+            if (totalYaPagado.compareTo(precioTotalDelPlan) < 0) {
+                suscripcionEntidad.setEstadoSuscripcion(EstadoSuscripcion.PENDIENTE_PAGO);
+                suscripcionRepository.save(suscripcionEntidad);
+            }
         }
         return mapearADto(pagoEntidad);
     }
